@@ -1,0 +1,117 @@
+<html>
+<head>
+	<title>Queue a TeleVisit</title>
+<script src='jquery.min.js'></script>
+<script src='bootstrap/js/bootstrap.js' type="text/javascript"></script>
+  <!-- Bootstrap core CSS -->
+<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<link href="styles.css" rel="stylesheet">
+
+<script type="text/javascript">
+
+
+function addToQueue(){
+  
+  var newUser = {
+     name: $("#name").val(),
+	 numericMeetingId : $("#bjnid").val()
+	 };
+	 
+  
+  $.ajax( {
+  url: "/queue",
+  method: 'POST',
+  data: JSON.stringify(newUser),
+  contentType: 'application/json'
+  }).done( (data) => {
+    $("#results").val( JSON.stringify(data,null,2) );
+	console.log("** Enqueued:  " + JSON.stringify(data,null,2));
+	alert("Successfully added: " + newUser.name);
+    $("#name").val("");
+	$("#bjnid").val("");
+	
+  }).fail( (error) => {
+	$("#results").val( JSON.stringify(data,null,2) );
+  });
+}
+
+function onChange() {
+  var n = $("#name").val();
+  var b = $("#bjnid").val();
+  
+  n = n.trim();
+  b = b.trim();
+  $("#addbtn").prop('disabled', ( (n == "") || (b=="") ) );
+}
+
+function onLoad(){
+  onChange();
+}
+
+function gotoACD(){
+  window.location = "/";
+}
+
+function resetACD() {
+  $.ajax( {
+  url: "/queue/reset",
+  method: 'GET',
+  contentType: 'application/json'
+  }).done( (data) => {
+	$("#results").val( JSON.stringify(data,null,2) );
+  }).fail( (error) => {
+	$("#results").val( JSON.stringify(error,null,2) );
+  });
+}
+
+$(window).load(onLoad);
+
+</script>
+	
+	
+</head>
+<body>
+<h1>Queue a Telemedical Call</h1>
+	<div id="peeps">
+	  <div class="peep">
+	    <div class="prompt">Name:</div>
+		<div class="field"> <input type="text" id="name" 
+							 oninput="onChange()"
+							placeholder="name"/></div>
+	  </div> 
+	  <div class="peep">
+	    <div class="prompt">BlueJeans Meeting</div>
+		<div class="field"> <input type="text" id="bjnid" 
+							 oninput="onChange()"
+							placeholder="Numeric Meeting Id"/></div>
+	  </div> 
+	  <div class="peep">
+	    <div class="prompt">Add to Queue</div>
+		<div class="field"> <button id="addbtn" onclick="addToQueue()">Queue me!</button></div>
+	  </div> 
+
+	</div>
+	
+<div id="debug">
+    <div>Debugging Area</div>
+	<div class="btn-group" role="group" aria-label="...">
+		<button type="button" class="btn btn-success" onclick="gotoACD()">ACD Status</button>
+		<div class="btn-group" role="group">
+	
+			<div class="dropup">
+			  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+				Show Raw Data
+				<span class="caret"></span>
+			  </button>
+			  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+				<li><a href="#">
+					<textarea id="results" rows="10" cols="64"></textarea>
+				</a></li>
+			  </ul>
+			</div>
+		</div>
+		<button type="button" class="btn btn-warning" onclick="resetACD()">Reset ACD</button>
+	</div>
+</div>
+</body>	
+</html>

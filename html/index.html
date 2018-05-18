@@ -1,0 +1,147 @@
+<html>
+<head>
+	<title>TeleVisit Status</title>
+<script src='jquery.min.js'></script>
+<script src='bootstrap/js/bootstrap.js' type="text/javascript"></script>
+  <!-- Bootstrap core CSS -->
+<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<link href="styles.css" rel="stylesheet">
+
+<script type="text/javascript">
+
+// Time delay between API calls to update the display of the ACD Queue
+var interval = 2000; // Queue update rate (millisec)
+
+var callQ = [];		// our copy of the ACD queue
+
+
+// Make AJAX call to retrieve from ACD the URL that will launch
+// the user into the correct BlueJeans meeting
+//
+function launchVideo(theId){
+  $.ajax( {
+  url: "/dequeue/"+theId,
+  method: 'GET',
+  contentType: 'application/json'
+  }).done( (data) => {
+    getQueue();
+    $("#results").val( JSON.stringify(data,null,2) );
+	console.log("** calling:  " + JSON.stringify(data,null,2));
+	alert("Normally would launch video via:\n"
+	 + data.bluejeans);
+  }).fail( (error) => {
+	$("#results").val( JSON.stringify(data,null,2) );
+  });
+}
+
+function idToCaller(theId){
+  var p = null;
+  for(var i=0; i<callQ.length; i++){
+     if(theId == callQ[i].id){
+	   p = callQ[i];
+	   break;
+	   }
+  }
+  return p;
+}
+
+function takeCall(anId){
+    var p = idToCaller(anId);
+	if(p == null){
+	  alert("Could not find that user record");
+	  return;
+	  }
+
+    if (confirm("Join call from: " + p.name + "?")){
+		 launchVideo(anId)
+    }
+}
+
+
+function buildQueue(peeps){
+  var s = "";
+  
+  callQ = peeps;	// save our copy
+  
+  peeps.forEach( (inQ,i)=> {
+    var d = new Date( parseInt(inQ.requested) );
+    s += '<div class="peep" onclick="takeCall(' + inQ.id +')">';
+	s += '<div class="slot">' + (i+1) + ') </div>';
+	s += '<div class="name">' + inQ.name + '</div>';
+	s += '<div class="when">' + d.toLocaleTimeString() + '</div>';
+	s += '</div>';
+  });
+  
+  $("#peeps").html(s);
+  $("#results").val( JSON.stringify(peeps,null,2) );
+}
+
+
+var timer = null;
+var heartBeat = 0;	// heartbeat indicator
+
+function getQueue(){
+  if(timer) {
+    clearTimeout(timer);
+  }
+  $("#heartBeat").text(heartBeat++);
+  $.ajax( {
+  url: "/queue",
+  method: 'GET',
+  contentType: 'application/json'
+  }).done( (data) => {
+    buildQueue(data);
+  }).fail( (error) => {
+	$("#results").val( JSON.stringify(data,null,2) );
+  });
+  timer = setTimeout( ()=>{ getQueue(); }, interval);
+}
+
+function onLoad(){
+  getQueue();
+}
+
+function gotoAdd(){
+ window.location = "/addme.html";
+}
+
+$(window).load(onLoad);
+
+</script>
+	
+	
+</head>
+<body>
+<h1>Video Request ACD Status</h1>
+    <p id="intro">Realtime display of requests for Video Session.  Click on an entry to launch a BlueJeans call with the requester</p>
+	<div id="peeps">
+	</div>
+	
+<div id="debug">
+    <div>Debugging Area</div>
+	
+	<div class="btn-group" role="group" aria-label="...">
+		<button type="button" class="btn btn-info" onclick="gotoAdd()">Add a Call</button>
+
+		<div class="btn-group" role="group">
+
+			<div class="dropup">
+			  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+				Show Raw Data
+				<span class="caret"></span>
+			  </button>
+			  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+				<li><a href="#">
+					<textarea id="results" rows="10" cols="64"></textarea>
+				</a></li>
+			  </ul>
+			</div>
+		</div>
+	</div>
+	<div>
+	  <span>App Heartbeat: </span><span id="heartBeat"></span>
+	</div>
+	
+</div>
+</body>	
+</html>

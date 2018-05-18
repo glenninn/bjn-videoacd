@@ -1,0 +1,20 @@
+{
+  "name": "simpleacd",
+  "version": "1.0.0",
+  "description": "Reference design of a simple ACD for BlueJeans calls",
+  "main": "acd.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+	"start": "node acd.js"
+  },
+  "author": "Glenn Inn <glenninn@yahoo.com>",
+  "repository": {
+    "type": "git",
+	"url" : "https://github.com/glenninn/bjn-videoacd.git"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3"
+  }
+}
