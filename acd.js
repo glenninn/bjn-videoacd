@@ -1,9 +1,24 @@
+var https = require('https');
+var http  = require('http');
+var fs    = require("fs");
 var express=require("express");
 var bodyParser = require("body-parser");
 var app = express();
+var router = express.Router();
 
 // Set port apropos for Heroku
 var ourPort = process.env.PORT || 80;
+var secPort = 443;
+
+var sslOptions = {
+	cert: fs.readFileSync("./certs/server.crt"),
+	key:  fs.readFileSync("./certs/server.pem")
+};
+
+var httpsServer = https.createServer(sslOptions,app);
+var server = httpsServer.listen(secPort, ()=>{
+	console.log("HTTPS Server listening on port: " + secPort);
+});
 
 // database "Key" field value
 var idCounter = 1000;
@@ -12,7 +27,9 @@ var idCounter = 1000;
 var theQueue = [];
 
 
-var appVersion = "1.0.0";
+var appVersion = "1.1.0";
+// 1.0.0  - basic http functionality
+// 1.1.0  - moved to https
 
 /* Video ACD static HTML pages
 	(/html/)index.html  standard landing page showing realtime ACD call status
@@ -84,6 +101,8 @@ app.use( express.static(__dirname + "/html"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded( {extended: true} ));
 
+app.use("/",router);
+
 // Routine to create the BlueJeans launch URL
 //   /webrtc -- force using Web based 
 //   /quick  -- bypass entry steps, go into meeting quickly
@@ -106,7 +125,7 @@ function acdStatus(){
 }
 
 
-app.route("/queue")
+router.route("/queue")
   .get( (req,res)=>{
 	res.status(200).json( theQueue );
   })
@@ -122,13 +141,13 @@ app.route("/queue")
 							 caller : req.body } );
   });
   
-app.route("/queue/status")
+router.route("/queue/status")
   .get( (req,res)=>{
 	  var resp = acdStatus(); 
 	  res.status(200).json(resp);	  
   });
   
-app.route("/queue/reset")
+router.route("/queue/reset")
   .get( (req,res)=>{
 	  initialize();
 	  var resp = acdStatus(); 
@@ -136,7 +155,7 @@ app.route("/queue/reset")
   });
 
 
-app.route("/queue/:id")
+router.route("/queue/:id")
   .get( (req,res)=>{
 	  var iWant;
 	  try{
@@ -189,7 +208,7 @@ app.route("/queue/:id")
 	  }
   });
   
-app.route("/dequeue/:id")
+router.route("/dequeue/:id")
   .get( (req,res)=>{
 	  var iWant;
 	  try{
@@ -218,7 +237,7 @@ app.route("/dequeue/:id")
  });
 
  
-app.route("/dequeue")
+router.route("/dequeue")
   .get( (req,res)=>{
 	  if(theQueue.length == 0){
 		  res.status(500).json( { results: "Queue is empty" } );
