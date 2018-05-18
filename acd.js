@@ -8,7 +8,7 @@ var router = express.Router();
 
 // Set port apropos for Heroku
 var ourPort = process.env.PORT || 80;
-var secPort = 443;
+var secPort = process.env.PORT ||443;
 
 var sslOptions = {
 	cert: fs.readFileSync("./certs/server.crt"),
@@ -259,8 +259,9 @@ function initialize(){
 }
 
 initialize();
-
+/*
 app.listen(ourPort, ()=>{
 console.log("\n*** ACD is up and listening on Port: " + ourPort);
 });	
 
+*/
