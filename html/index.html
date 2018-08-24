@@ -20,7 +20,7 @@ var callQ = [];		// our copy of the ACD queue
 //
 function launchVideo(theId){
   $.ajax( {
-  url: "/dequeue/"+theId,
+  url: "/select/"+theId,
   method: 'GET',
   contentType: 'application/json'
   }).done( (data) => {

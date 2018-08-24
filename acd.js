@@ -271,6 +271,7 @@ router.route("/queue")
 	  console.log("/queue  -- adding record (" + req.body.name +")");
 	  req.body.requested = Date.now();
 	  req.body.id = idCounter++;
+	  req.body.selected = false;
 	  theQueue.push(req.body);
 	  res.status(200).json( {results: "ok",
 							 caller : req.body } );
@@ -353,7 +354,11 @@ router.route("/queue/:id/where")
 		  }
 	  }
 	  console.log("Finding user id(" + req.params.id + ") position: " + pos );
-	  res.status(200).json( {results: pos} );
+	  var whereInfo = {
+		position : pos,
+		selected : (pos>=0) ? theQueue[pos].selected : false
+	  };
+	  res.status(200).json( whereInfo );
   });
   
   
@@ -374,15 +379,20 @@ router.route("/dequeue/:id")
 	  for(var i=0; (i<theQueue.length) && !done; i++){
 		  if( theQueue[i].id == iWant ){
 			  p = theQueue[i];
-			  theQueue.splice(i,1);
+			  if(theQueue[i].selected)
+				  theQueue.splice(i,1);	// remove from queue
 			  console.log("/queue/"+iWant + " Dequeued (" + p.name + ")" );
 
-			  makeVideoUrl(p).then( (theUrl)=> {
-				  res.status(200).json( theUrl );
+			  if(p.meetingId) {
+				res.status(200).json( p.bluejeans );
+			  } else {
+				makeVideoUrl(p).then( (theUrl)=> {
+					res.status(200).json( theUrl );
 				  
-			  }, (noUrl)=>{
-				  res.status(401).json(noUrl);
-			  });
+				}, (noUrl)=>{
+					res.status(401).json(noUrl);
+				});
+			  }
 			  done = true;
 		  }
 	  }
@@ -402,15 +412,54 @@ router.route("/dequeue")
 		  p = theQueue[0];
 		  theQueue.splice(0,1);
 		  console.log("/dequeue  Dequeued (" + p.name + ")" );
-
-		  makeVideoUrl(p).then( (theUrl)=> {
-			  res.status(200).json( theUrl );
-			  
-		  }, (noUrl)=>{
-			  res.status(401).json(noUrl);
-		  });
+		  
+		  if(p.meetingId) {
+			  res.status(200).json( p.bluejeans );
+		  } else {
+			  makeVideoUrl(p).then( (theUrl)=> {
+				res.status(200).json( theUrl );
+				  
+			  }, (noUrl)=>{
+				res.status(401).json(noUrl);
+			  });
+		  }
 	  }
   });
+  
+router.route("/select/:id")
+  .get( (req,res)=>{
+	  var iWant;
+	  try{
+		  iWant = parseInt( req.params.id );
+	  }catch(e) {
+		  console.log("/select/"+req.params.id+":  Invalid index");
+		  res.status(500).json({results:"invalid index: " + req.params.id});
+		  return;
+	  };
+ 	  var p = null;
+	  var done = false;
+	  
+	  for(var i=0; (i<theQueue.length) && !done; i++){
+		  if( theQueue[i].id == iWant ){
+			  p = theQueue[i];
+			  theQueue[i].selected = true;	// flag this appt as selected by an agent
+			  console.log("/select/"+iWant + " Dequeued (" + p.name + ")" );
+
+			  makeVideoUrl(p).then( (theUrl)=> {
+				  res.status(200).json( theUrl );
+				  
+			  }, (noUrl)=>{
+				  res.status(401).json(noUrl);
+			  });
+			  done = true;
+		  }
+	  }
+	  if( p==null ) {
+		  console.log("/queue/"+iWant+":  Person not in queue");
+		  res.status(500).json({ results: "Person not in queue"});
+	  }
+ });
+ 
   
   
 function initialize(){

@@ -15,7 +15,26 @@ var timer = null;
 var heartBeat = 0;
 var ourID = 0;
 
+
+
+function launchMeeting(){
+  $.ajax( {
+  url: "/dequeue/" + ourID,
+  method: 'GET',
+  contentType: 'application/json'
+  }).done( (data) => {
+    console.log("launch url: " + JSON.stringify(data,null,2) );
+	var relink ="<a href='" + data + "'>Click Here to Rejoin Meeting</a>";
+	$("#qposn").html(relink);
+	
+	window.open(data,"_blank");
+	
+  });
+}
+
+
 function trackQstatus() {
+  var renewTimer = true;
   if(timer) {
     clearTimeout(timer);
   }
@@ -28,27 +47,36 @@ function trackQstatus() {
     console.log("qstatus: " + JSON.stringify(data,null,2) );
 	$("#qstatus").show();
 	var posn = "";
-	switch(data.results) {
-	  case 1 : posn = "You're next!!";
+	switch(data.position) {
+	  case 0 :
+	    posn = "You're next ...";
+		if(data.selected) {
+		    renewTimer = false;	  
+			launchMeeting();
+		}
+		break;
+	  case 1 : posn = "There is 1 ahead of you...";
 	  break;
 	  case -1 : posn = "Can't find you in the queue...?";
 	  break;
-	  default: posn = "There are " + data.results + " ahead of you";
+	  default: posn = "There are " + data.position + " ahead of you";
 	  break;
 	}
-	$("#qposn").text(posn);
+	
+    if(renewTimer) {
+		timer = setTimeout( ()=>{ trackQstatus(); }, interval);
+		$("#qposn").text(posn);
+	}
+
   }).fail( (error) => {
     console.log("qstatus ERROR: " + JSON.stringify(error,null,2) );
 	$("#qposn").text("Error checking queue position");
   });
 
-  timer = setTimeout( ()=>{ trackQstatus(); }, interval);
-
 }
 
 
 function addToQueue(){
-  
   var newUser = {
      name: $("#name").val()
 	 };
@@ -83,9 +111,8 @@ function onChange() {
 function onLoad(){
   onChange();
   $("#qstatus").hide();
-  $("#qposn").val("Hi there");
-  console.log("HIERE");
 }
+
 
 function gotoACD(){
   window.location = "/";
