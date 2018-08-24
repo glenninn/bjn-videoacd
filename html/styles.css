@@ -1,6 +1,6 @@
 body {
 	background-color: #bae6f4;
-	margin: 5px;
+	margin: 10px;
 }
 h1{
 	background-color: white;
@@ -19,7 +19,7 @@ input {
 	padding-top: 5px;
 }
 
-#intro {
+.intro {
 	width: 50%;
 	padding: 5px;
 	font-size: 16px;
@@ -29,6 +29,11 @@ input {
 	width: 50%;
 	padding: 5px;
 	border: 1px solid red;
+}
+
+.peepscrl {
+	overflow-y: auto; 
+	max-height: 200px;	
 }
 
 .peep {

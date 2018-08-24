@@ -7,6 +7,11 @@
 <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
 <link href="styles.css" rel="stylesheet">
 
+<link rel="icon" type="image/png" sizes="192x192"  href="/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+
 <script type="text/javascript">
 
 // Time delay between API calls to update the display of the ACD Queue
@@ -47,25 +52,26 @@ function trackQstatus() {
     console.log("qstatus: " + JSON.stringify(data,null,2) );
 	$("#qstatus").show();
 	var posn = "";
+
+	if(data.selected) {
+		renewTimer = false;	  
+		launchMeeting();
+	}
+
+
 	switch(data.position) {
-	  case 0 :
-	    posn = "You're next ...";
-		if(data.selected) {
-		    renewTimer = false;	  
-			launchMeeting();
-		}
+	  case 0 :  $("#qposn").text("You're next ...");
 		break;
-	  case 1 : posn = "There is 1 ahead of you...";
-	  break;
-	  case -1 : posn = "Can't find you in the queue...?";
-	  break;
-	  default: posn = "There are " + data.position + " ahead of you";
-	  break;
+	  case 1 :  $("#qposn").text("There is 1 ahead of you...");
+	    break;
+	  case -1 : $("#qposn").text("Can't find you in the queue...?");
+	    break;
+	  default:  $("#qposn").text("There are " + data.position + " ahead of you");
+	    break;
 	}
 	
     if(renewTimer) {
 		timer = setTimeout( ()=>{ trackQstatus(); }, interval);
-		$("#qposn").text(posn);
 	}
 
   }).fail( (error) => {
@@ -137,16 +143,16 @@ $(document).ready(onLoad);
 	
 </head>
 <body>
-<h1>Queue a Telemedical Call</h1>
+<h1>Request a Video Appointment</h1>
 	<div id="peeps">
 	  <div class="peep">
 	    <div class="prompt">Name:</div>
 		<div class="field"> 
-			  <input type="text" id="name" oninput="onChange()" placeholder="name"/>
+			  <input type="text" id="name" oninput="onChange()" placeholder="Enter your name"/>
 		</div>
 	  </div> 
 	  <div class="peep">
-	    <div class="prompt">Add to Queue</div>
+	    <div class="prompt"></div>
 		<div class="field"> <button id="addbtn" onclick="addToQueue()">Make Appointment!</button></div>
 	  </div>
 	  <div id="qstatus" class="peep">
@@ -159,7 +165,7 @@ $(document).ready(onLoad);
 <div id="debug">
     <div>Debugging Area</div>
 	<div class="btn-group" role="group" aria-label="...">
-		<button type="button" class="btn btn-success" onclick="gotoACD()">ACD Status</button>
+		<button type="button" class="btn btn-success" onclick="gotoACD()">View ACD Status</button>
 		<div class="btn-group" role="group">
 	
 			<div class="dropup">

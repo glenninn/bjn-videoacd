@@ -7,6 +7,11 @@
 <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
 <link href="styles.css" rel="stylesheet">
 
+<link rel="icon" type="image/png" sizes="192x192"  href="/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+
 <script type="text/javascript">
 
 // Time delay between API calls to update the display of the ACD Queue
@@ -111,16 +116,20 @@ $(window).load(onLoad);
 	
 </head>
 <body>
-<h1>Video Request ACD Status</h1>
-    <p id="intro">Realtime display of requests for Video Session.  Click on an entry to launch a BlueJeans call with the requester</p>
-	<div id="peeps">
+<h1>Agent Console - Video Appointments</h1>
+	<p class="intro">This application provides an Automatic Call Distribution ("ACD") queueing for BlueJeans video sessions.  This program is provided as a Reference Design, <i>use at your own risk</i>.</p>
+    <p class="intro">Realtime display of requests for a Video Session.  Click on an entry to launch a BlueJeans call with the requester</p>
+    <h2>Appointment Queue</h2>
+	<p class="intro">Click on name to start the Video Appointment</p>
+	
+	<div id="peeps" class="peepscrl">
 	</div>
 	
 <div id="debug">
-    <div>Debugging Area</div>
+	<h4>Debugging Area</h4>
 	
 	<div class="btn-group" role="group" aria-label="...">
-		<button type="button" class="btn btn-info" onclick="gotoAdd()">Add a Call</button>
+		<button type="button" class="btn btn-info" onclick="gotoAdd()">Make Appointment</button>
 
 		<div class="btn-group" role="group">
 
