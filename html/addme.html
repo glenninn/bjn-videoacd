@@ -99,6 +99,7 @@ function addToQueue(){
 	ourID = data.caller.id;
 	alert("Appointment made for: " + newUser.name);
     $("#name").val("");
+	$("title").text(newUser.name + " appt")
 	
 	trackQstatus();
 	
@@ -122,6 +123,10 @@ function onLoad(){
 
 function gotoACD(){
   window.location = "/";
+}
+
+function newAppt(){
+  window.open("/addme.html","_blank");
 }
 
 function resetACD() {
@@ -165,6 +170,7 @@ $(document).ready(onLoad);
 <div id="debug">
     <div>Debugging Area</div>
 	<div class="btn-group" role="group" aria-label="...">
+		<button type="button" class="btn btn-info" onclick="newAppt()">New Appointment</button>
 		<button type="button" class="btn btn-success" onclick="gotoACD()">View ACD Status</button>
 		<div class="btn-group" role="group">
 	
@@ -184,6 +190,9 @@ $(document).ready(onLoad);
 	</div>
 	<div>
 	  <span>App Heartbeat: </span><span id="heartBeat"></span>
+	</div>
+	<div>
+	  <span>(c)2018, BlueJeans.</span>
 	</div>
 </div>
 </body>	

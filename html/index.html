@@ -78,6 +78,7 @@ function buildQueue(peeps){
   
   $("#peeps").html(s);
   $("#results").val( JSON.stringify(peeps,null,2) );
+  $("title").text(peeps.length + " Appt's in Queue")
 }
 
 
@@ -148,6 +149,9 @@ $(window).load(onLoad);
 	</div>
 	<div>
 	  <span>App Heartbeat: </span><span id="heartBeat"></span>
+	</div>
+	<div>
+	  <span>(c)2018, BlueJeans.</span>
 	</div>
 	
 </div>
