@@ -22,6 +22,9 @@ if(process.argv.length == 3) {
 	var opt = process.argv[2];
 	opt = opt.toLowerCase();
 	
+	for(var i=0; i< process.argv.length; i++){
+		console.log("arg["+i+"]: " + process.argv[i]);
+	
 	onHeroku = (opt == "heroku");
 }
 	
@@ -29,6 +32,7 @@ if(process.argv.length == 3) {
 
 // Set port apropos for Heroku
 if(onHeroku) {
+	console.log("*** HEROKU SELECTED ***");
 	secPort = process.env.PORT || 80;
 	app.listen(secPort, ()=>{
 		console.log("ON HEROKU, started listening on: " + secPort );
