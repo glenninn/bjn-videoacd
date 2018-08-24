@@ -1,10 +1,13 @@
 var https = require('https');
 var http  = require('http');
 var fs    = require("fs");
+var auth  = require("./auth.js");
+
 var express=require("express");
 var bodyParser = require("body-parser");
 var app = express();
 var router = express.Router();
+
 
 // Set port apropos for Heroku
 var ourPort = process.env.PORT || 80;
@@ -27,9 +30,10 @@ var idCounter = 1000;
 var theQueue = [];
 
 
-var appVersion = "1.1.0";
+var appVersion = "1.2.0";
 // 1.0.0  - basic http functionality
 // 1.1.0  - moved to https
+// 1.2.0  - add BlueJeans scheduling
 
 /* Video ACD static HTML pages
 	(/html/)index.html  standard landing page showing realtime ACD call status
@@ -47,6 +51,7 @@ var appVersion = "1.1.0";
 				 The numericMeetingId is the dialable meeting ID from 
 				 scheduling a BlueJeans meeting
    /queue/{id}	 (GET) return element in ACD whose ID value is {id}
+   /queue/{id}/where (GET) Show what position {id} is in call queue
    /queue/status (GET) return status of the ACD system
    /queue/reset	 (GET) reset the ACD queue to initial "dummy" value
    
@@ -67,31 +72,31 @@ var dummyQ = [
 	{  
 		id : idCounter++,
 		name: "Jenny Patient",
-		numericMeetingId : "12345123000",
+		numericMeetingId : "",
 		requested : Date.now() - 1500
 	},
 	{  
 		id : idCounter++,
 		name: "Wong Jackman",
-		numericMeetingId : "12345123001",
+		numericMeetingId : "",
 		requested : Date.now() - 5500
 	},
 	{  
 		id : idCounter++,
 		name: "Bruce Lee",
-		numericMeetingId : "12345123002",
+		numericMeetingId : "",
 		requested : Date.now() - 10500
 	},
 	{  
 		id : idCounter++,
 		name: "Susan Whang",
-		numericMeetingId : "12345123003",
+		numericMeetingId : "",
 		requested : Date.now() - 110500
 	},
 	{  
 		id : idCounter++,
 		name: "Ted Tracy",
-		numericMeetingId : "12345123004",
+		numericMeetingId : "",
 		requested : Date.now() - 150000
 	}
 ];
@@ -103,13 +108,142 @@ app.use(bodyParser.urlencoded( {extended: true} ));
 
 app.use("/",router);
 
+//
+// BlueJeans API-related constants
+//
+var host           = "api.bluejeans.com";
+var accessTokenAPI = "/oauth2/token";
+var schedMeetingAPI   = "/v1/user/{userId}/scheduled_meeting";
+
+
+//
+// BlueJeans OAuth information
+//
+var configFile = "config.json";
+var oauthInfo = {};
+var ourTokenInfo = null;
+
+//
+// Function to return BlueJeans OAUTH access token.  If the token is
+// non-existent, or expired, the function will renew with BlueJeans
+//
+function getAccessToken() 
+{
+	var p = new Promise( (resolve,reject) =>{
+		
+		if(  !ourTokenInfo || (ourTokenInfo.expiresAt < Date.now()) ){
+			console.log("token expired, renewing client session");
+			auth.post(host,accessTokenAPI,oauthInfo).then(  (results)=> {
+				
+				ourTokenInfo = {
+					access_token : results.access_token,
+					expiresAt    : Date.now() + (1000*results.expires_in)
+				};
+				
+				console.log("Obtained BlueJeans OAUTH token: " + ourTokenInfo.access_token);
+				auth.authorize(ourTokenInfo.access_token);
+				resolve(ourTokenInfo.access_token);
+			}, (error)=> {
+				console.log("%Failed to renew OAUTH token: " + error);
+				reject(error);
+			});
+		} else {
+			resolve(ourTokenInfo.access_token);
+		}
+		
+	});
+	
+	return p;
+}
+
+
+//
+// Function to schedule a quick meeting in BlueJeans
+//
+function ScheduleBlueJeans(peep)	// userId,usePasscode, callback)
+{
+	var when = new Date().getTime();
+	var howManyMinutes = 15;
+	
+	var mtgDetails = {
+		title: 'ACD Meeting #' + peep.id,
+		endPointVersion: '2.10',
+		endPointType: 'WEB_APP',
+		timezone: "America/Los_Angeles",
+		start: when,
+		end: when + howManyMinutes * 60 * 1000,
+		advancedMeetingOptions: {
+			moderatorLess : true
+		}
+	};
+	
+	var url = schedMeetingAPI.replace(/{userId}/, oauthInfo.userId);
+	url += "?email=false";
+	
+	var p = new Promise( (resolve,reject)=> {
+		
+		//
+		// Get our BlueJeans Access token	
+		getAccessToken().then( (token)=> {
+		
+			// Now schedule a BlueJeans Meeting
+			auth.post(host,url,mtgDetails).then( (mtgResults)=> {
+				
+				// Success ...
+				console.log("-->Schedule BJN meeting: " + mtgResults.numericMeetingId);
+				resolve(mtgResults);
+				
+			}, (mtgError)=> {
+				
+				// Failed to schedule...
+				console.log("???Error Scheduling meeting: " + JSON.stringify(mtgError) );
+				reject(error);
+				
+			});
+			
+		}, (error)=> {
+			
+			// Failed to get an Access Token
+			reject(error);
+			
+		});
+		
+	});
+	
+	return p;
+}
+
+
 // Routine to create the BlueJeans launch URL
 //   /webrtc -- force using Web based 
 //   /quick  -- bypass entry steps, go into meeting quickly
 // If the Agents are not using WebRTC, then do not append these strings
 // to the URL
 function makeVideoUrl(peep){
-	peep.bluejeans = "https://bluejeans.com/" + peep.numericMeetingId + "/webrtc/quick";
+	var p = new Promise( (resolve,reject)=> {
+		
+		ScheduleBlueJeans(peep).then( (mtgDetails)=> {
+			
+			peep.numericMeetingId = mtgDetails.numericMeetingId;
+			peep.meetingId = mtgDetails.id;
+			peep.bluejeans = "https://bluejeans.com/" + peep.numericMeetingId + "/webrtc/quick";
+			console.log("BlueJeans Meeting: " + peep.bluejeans );
+			
+			resolve(peep.bluejeans);
+			
+		}, (error)=> {
+			
+			peep.numericMeetingId = null;
+			peep.meetingId = null;
+			peep.bluejeans = "";
+
+			reject(peep.bluejeans);
+			
+		});
+	
+	});
+	
+	return p;
 }
 
 
@@ -130,10 +264,11 @@ router.route("/queue")
 	res.status(200).json( theQueue );
   })
   .post( (req,res)=>{
-	  console.log("/queue  -- adding record!");
-	  if(!req.body || !req.body.name || !req.body.numericMeetingId){
+	  if(!req.body || !req.body.name ){
+		  console.log("/queue -- fail to add record, invalid format");
 		  res.status(400).json( { results: "Invalid object format: name, numericMeetingId"});
 	  }
+	  console.log("/queue  -- adding record (" + req.body.name +")");
 	  req.body.requested = Date.now();
 	  req.body.id = idCounter++;
 	  theQueue.push(req.body);
@@ -149,6 +284,7 @@ router.route("/queue/status")
   
 router.route("/queue/reset")
   .get( (req,res)=>{
+	  console.log("/queue/reset - Resetting ACD queue");
 	  initialize();
 	  var resp = acdStatus(); 
 	  res.status(200).json(resp);	  
@@ -208,6 +344,19 @@ router.route("/queue/:id")
 	  }
   });
   
+router.route("/queue/:id/where")
+  .get( (req,res)=>{
+	  var pos = -1;
+	  for(var i=0; (i<theQueue.length) && (pos<0); i++){
+		  if(req.params.id == theQueue[i].id){
+			  pos = i;
+		  }
+	  }
+	  console.log("Finding user id(" + req.params.id + ") position: " + pos );
+	  res.status(200).json( {results: pos} );
+  });
+  
+  
 router.route("/dequeue/:id")
   .get( (req,res)=>{
 	  var iWant;
@@ -220,14 +369,21 @@ router.route("/dequeue/:id")
 	  };
 	  
 	  var p = null;
-	  for(var i=0; i<theQueue.length; i++){
+	  var done = false;
+	  
+	  for(var i=0; (i<theQueue.length) && !done; i++){
 		  if( theQueue[i].id == iWant ){
 			  p = theQueue[i];
 			  theQueue.splice(i,1);
-			  makeVideoUrl(p);
 			  console.log("/queue/"+iWant + " Dequeued (" + p.name + ")" );
-			  res.status(200).json( p );
-			  break;
+
+			  makeVideoUrl(p).then( (theUrl)=> {
+				  res.status(200).json( theUrl );
+				  
+			  }, (noUrl)=>{
+				  res.status(401).json(noUrl);
+			  });
+			  done = true;
 		  }
 	  }
 	  if( p==null ) {
@@ -245,23 +401,46 @@ router.route("/dequeue")
 	  } else {
 		  p = theQueue[0];
 		  theQueue.splice(0,1);
-		  makeVideoUrl(p);
 		  console.log("/dequeue  Dequeued (" + p.name + ")" );
-		  res.status(200).json(p);
+
+		  makeVideoUrl(p).then( (theUrl)=> {
+			  res.status(200).json( theUrl );
+			  
+		  }, (noUrl)=>{
+			  res.status(401).json(noUrl);
+		  });
 	  }
   });
   
+  
 function initialize(){
+
+	// Read from environment, the OAuth Credentials
+	//
+	fs.readFile(".\\" + configFile, (err,data)=> {
+		if(err) {
+			console.log("Error reading file: " + configFile +"\n"+err);
+			process.exit();
+		}
+		var sd = data.toString();
+		try
+		{
+			oauthInfo = JSON.parse(sd);
+			console.log("Read Config File: " + JSON.stringify(oauthInfo,null,2) );
+		}
+		catch(e){
+			console.log("Error parsing config file: " + configFile );
+			process.exit();
+		}
+	});
+	
+	//
+	// Initialize the internal-memory Call Queue
+	//
 	theQueue = [];
 	dummyQ.forEach( (item)=>{
 		theQueue.splice(0,0,item);
 	});
-}
+}	
 
 initialize();
-/*
-app.listen(ourPort, ()=>{
-console.log("\n*** ACD is up and listening on Port: " + ourPort);
-});	
-
-*/

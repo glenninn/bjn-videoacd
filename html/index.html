@@ -27,8 +27,7 @@ function launchVideo(theId){
     getQueue();
     $("#results").val( JSON.stringify(data,null,2) );
 	console.log("** calling:  " + JSON.stringify(data,null,2));
-	alert("Normally would launch video via:\n"
-	 + data.bluejeans);
+	window.open(data,"_blank");
   }).fail( (error) => {
 	$("#results").val( JSON.stringify(data,null,2) );
   });

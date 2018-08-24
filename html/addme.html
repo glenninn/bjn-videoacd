@@ -9,12 +9,48 @@
 
 <script type="text/javascript">
 
+// Time delay between API calls to update the display of the ACD Queue
+var interval = 2000; // Queue update rate (millisec)
+var timer = null;
+var heartBeat = 0;
+var ourID = 0;
+
+function trackQstatus() {
+  if(timer) {
+    clearTimeout(timer);
+  }
+  $("#heartBeat").text(heartBeat++);
+  $.ajax( {
+  url: "/queue/" + ourID + "/where",
+  method: 'GET',
+  contentType: 'application/json'
+  }).done( (data) => {
+    console.log("qstatus: " + JSON.stringify(data,null,2) );
+	$("#qstatus").show();
+	var posn = "";
+	switch(data.results) {
+	  case 1 : posn = "You're next!!";
+	  break;
+	  case -1 : posn = "Can't find you in the queue...?";
+	  break;
+	  default: posn = "There are " + data.results + " ahead of you";
+	  break;
+	}
+	$("#qposn").text(posn);
+  }).fail( (error) => {
+    console.log("qstatus ERROR: " + JSON.stringify(error,null,2) );
+	$("#qposn").text("Error checking queue position");
+  });
+
+  timer = setTimeout( ()=>{ trackQstatus(); }, interval);
+
+}
+
 
 function addToQueue(){
   
   var newUser = {
-     name: $("#name").val(),
-	 numericMeetingId : $("#bjnid").val()
+     name: $("#name").val()
 	 };
 	 
   
@@ -26,9 +62,11 @@ function addToQueue(){
   }).done( (data) => {
     $("#results").val( JSON.stringify(data,null,2) );
 	console.log("** Enqueued:  " + JSON.stringify(data,null,2));
-	alert("Successfully added: " + newUser.name);
+	ourID = data.caller.id;
+	alert("Appointment made for: " + newUser.name);
     $("#name").val("");
-	$("#bjnid").val("");
+	
+	trackQstatus();
 	
   }).fail( (error) => {
 	$("#results").val( JSON.stringify(data,null,2) );
@@ -37,15 +75,16 @@ function addToQueue(){
 
 function onChange() {
   var n = $("#name").val();
-  var b = $("#bjnid").val();
   
   n = n.trim();
-  b = b.trim();
-  $("#addbtn").prop('disabled', ( (n == "") || (b=="") ) );
+  $("#addbtn").prop('disabled', (n == "") );
 }
 
 function onLoad(){
   onChange();
+  $("#qstatus").hide();
+  $("#qposn").val("Hi there");
+  console.log("HIERE");
 }
 
 function gotoACD(){
@@ -64,7 +103,7 @@ function resetACD() {
   });
 }
 
-$(window).load(onLoad);
+$(document).ready(onLoad);
 
 </script>
 	
@@ -75,20 +114,18 @@ $(window).load(onLoad);
 	<div id="peeps">
 	  <div class="peep">
 	    <div class="prompt">Name:</div>
-		<div class="field"> <input type="text" id="name" 
-							 oninput="onChange()"
-							placeholder="name"/></div>
-	  </div> 
-	  <div class="peep">
-	    <div class="prompt">BlueJeans Meeting</div>
-		<div class="field"> <input type="text" id="bjnid" 
-							 oninput="onChange()"
-							placeholder="Numeric Meeting Id"/></div>
+		<div class="field"> 
+			  <input type="text" id="name" oninput="onChange()" placeholder="name"/>
+		</div>
 	  </div> 
 	  <div class="peep">
 	    <div class="prompt">Add to Queue</div>
-		<div class="field"> <button id="addbtn" onclick="addToQueue()">Queue me!</button></div>
-	  </div> 
+		<div class="field"> <button id="addbtn" onclick="addToQueue()">Make Appointment!</button></div>
+	  </div>
+	  <div id="qstatus" class="peep">
+	   <div class="prompt">Queue Status</div>
+	   <div id="qposn" class="field"></div>
+	  </div>
 
 	</div>
 	
@@ -111,6 +148,9 @@ $(window).load(onLoad);
 			</div>
 		</div>
 		<button type="button" class="btn btn-warning" onclick="resetACD()">Reset ACD</button>
+	</div>
+	<div>
+	  <span>App Heartbeat: </span><span id="heartBeat"></span>
 	</div>
 </div>
 </body>	
