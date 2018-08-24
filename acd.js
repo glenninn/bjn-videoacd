@@ -8,20 +8,44 @@ var bodyParser = require("body-parser");
 var app = express();
 var router = express.Router();
 
+var secPort = process.env.PORT || 443;
+
+var onHeroku    = false;
+var sslOptions  = {};
+var httpsServer = null;
+var server      = null;
+
+//
+//  Check by command line option if this is running in Heroku
+//
+if(process.argv.length == 3) {
+	var opt = process.argv[2];
+	opt = opt.toLowerCase();
+	
+	onHeroku = (opt == "heroku");
+}
+	
+
 
 // Set port apropos for Heroku
-var ourPort = process.env.PORT || 80;
-var secPort = process.env.PORT ||443;
+if(onHeroku) {
+	secPort = process.env.PORT || 80;
+	app.listen(secPort, ()=>{
+		console.log("ON HEROKU, started listening on: " + secPort );
+	});
+	
+} else {
+	sslOptions = {
+		cert: fs.readFileSync("./certs/server.crt"),
+		key:  fs.readFileSync("./certs/server.pem")
+	};
 
-var sslOptions = {
-	cert: fs.readFileSync("./certs/server.crt"),
-	key:  fs.readFileSync("./certs/server.pem")
-};
+	httpsServer = https.createServer(sslOptions,app);
+	server = httpsServer.listen(secPort, ()=>{
+		console.log("HTTPS Server listening on port: " + secPort);
+	});
+}
 
-var httpsServer = https.createServer(sslOptions,app);
-var server = httpsServer.listen(secPort, ()=>{
-	console.log("HTTPS Server listening on port: " + secPort);
-});
 
 // database "Key" field value
 var idCounter = 1000;
@@ -463,25 +487,40 @@ router.route("/select/:id")
   
   
 function initialize(){
+	
+	if(onHeroku) {
+		//
+		// We're running on Heroku.  Read OAuth info from Process Environment
+		//
+		
+		oauthInfo = {
+			grant_type    : "client_credentials",
+			client_id     : process.env.CLIENT_ID,
+			client_secret : process.env.CLIENT_SECRET,
+			userId        : process.env.userId
+		};
+		
+	} else {
 
-	// Read from environment, the OAuth Credentials
-	//
-	fs.readFile(".\\" + configFile, (err,data)=> {
-		if(err) {
-			console.log("Error reading file: " + configFile +"\n"+err);
-			process.exit();
-		}
-		var sd = data.toString();
-		try
-		{
-			oauthInfo = JSON.parse(sd);
-			console.log("Read Config File: " + JSON.stringify(oauthInfo,null,2) );
-		}
-		catch(e){
-			console.log("Error parsing config file: " + configFile );
-			process.exit();
-		}
-	});
+		// Read from environment, the OAuth Credentials
+		//
+		fs.readFile(".\\" + configFile, (err,data)=> {
+			if(err) {
+				console.log("Error reading file: " + configFile +"\n"+err);
+				process.exit();
+			}
+			var sd = data.toString();
+			try
+			{
+				oauthInfo = JSON.parse(sd);
+				console.log("Read Config File: " + JSON.stringify(oauthInfo,null,2) );
+			}
+			catch(e){
+				console.log("Error parsing config file: " + configFile );
+				process.exit();
+			}
+		});
+	}
 	
 	//
 	// Initialize the internal-memory Call Queue
