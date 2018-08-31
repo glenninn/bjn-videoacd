@@ -100,34 +100,16 @@ var appVersion = "1.2.0";
 var dummyQ = [
 	{  
 		id : idCounter++,
-		name: "Jenny Patient",
-		numericMeetingId : "",
-		requested : Date.now() - 1500
-	},
-	{  
-		id : idCounter++,
-		name: "Wong Jackman",
+		name: "Second Inline",
 		numericMeetingId : "",
 		requested : Date.now() - 5500
 	},
 	{  
 		id : idCounter++,
-		name: "Bruce Lee",
+		name: "Jenny Patient",
 		numericMeetingId : "",
-		requested : Date.now() - 10500
-	},
-	{  
-		id : idCounter++,
-		name: "Susan Whang",
-		numericMeetingId : "",
-		requested : Date.now() - 110500
-	},
-	{  
-		id : idCounter++,
-		name: "Ted Tracy",
-		numericMeetingId : "",
-		requested : Date.now() - 150000
-	}
+		requested : Date.now() - 1500
+	}	
 ];
 
 
@@ -492,6 +474,7 @@ router.route("/select/:id")
   
   
 function initialize(){
+	console.log("** Initializing ***");
 	
 	if(onHeroku) {
 		//

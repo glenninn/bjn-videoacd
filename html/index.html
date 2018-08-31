@@ -107,7 +107,7 @@ function onLoad(){
 }
 
 function gotoAdd(){
- window.location = "/addme.html";
+ window.open("/addme.html","_blank"); 
 }
 
 $(window).load(onLoad);
@@ -130,7 +130,7 @@ $(window).load(onLoad);
 	<h4>Debugging Area</h4>
 	
 	<div class="btn-group" role="group" aria-label="...">
-		<button type="button" class="btn btn-info" onclick="gotoAdd()">Make Appointment</button>
+		<button type="button" class="btn btn-info" onclick="gotoAdd()">Make Appointment &nbsp;<i class="glyphicon glyphicon-new-window"></i></button>
 
 		<div class="btn-group" role="group">
 
