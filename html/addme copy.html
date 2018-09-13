@@ -143,13 +143,6 @@ function resetACD() {
   });
 }
 
-function onKeyUp(evt) {
-	evt.preventDefault();
-	if(evt.keyCode == 13){
-	  addToQueue();
-	  }
-}
-
 $(document).ready(onLoad);
 
 </script>
@@ -161,25 +154,25 @@ $(document).ready(onLoad);
 	<div class="fluid-container">	
 		<header class="row">
 			<div class="logo"><img src="../images/logo.svg" height="30"></div>
-			<div class="new-appt"><span>New Appointment &nbsp; </span><button type="button" class="btn btn-info header-btn" onclick="newAppt()"><i class="glyphicon glyphicon-plus"></i></button></div>
+			<div class="new-appt"><span>Make Appointment &nbsp; </span><button type="button" class="btn btn-info" onclick="gotoAdd()"><i class="glyphicon glyphicon-plus"></i></button></div>
 			
 		</header>
 		
 		<section class="row">
-			<h1 class="centered">Request a Video Appointment</h1>
-			<div class="dialogue">	
-				<h1>Make Appointment</h1>						
+			<div class="dialogue">
+				<h1>Request a Video Appointment</h1>			
 				<div id="peeps">
-				    <div class="prompt">*Name:</div>
+				  <div class="peep">
+				    <div class="prompt">Name:</div>
 					<div class="field"> 
-						  <input type="text" id="name"  oninput="onChange()" onkeyup="onKeyUp()" placeholder="Enter your name"/>
+						  <input type="text" id="name" oninput="onChange()" placeholder="Enter your name"/>
 					</div>
-					
+				  </div> 
+				  <div class="peep">
 				    <div class="prompt"></div>
-					<div class="field"> <button id="addbtn" class="cta" onclick="addToQueue()">Submit</button></div>
+					<div class="field"> <button id="addbtn" onclick="addToQueue()">Make Appointment!</button></div>
 				  </div>
-				  
-				  <div id="qstatus">
+				  <div id="qstatus" class="peep">
 				   <div class="prompt">Queue Status</div>
 				   <div id="qposn" class="field"></div>
 				  </div> 
@@ -187,13 +180,12 @@ $(document).ready(onLoad);
 				</div>
 			</div>
 	
-			<div id="debug" class="w6">
-			    <h4 style="text-align: center;">Debugging Area</h4>
-				<div class="btn-group w12" role="group" aria-label="...">
-					<div class="three-col">
-						<a class="btn acd-btn" onclick="gotoACD()">View ACD Status</a>
-					</div>
-					<div class="btn-group three-col" role="group">
+			<div id="debug">
+			    <div>Debugging Area</div>
+				<div class="btn-group" role="group" aria-label="...">
+<!-- 					<button type="button" class="btn btn-info" onclick="newAppt()">New Appointment &nbsp;<i class="glyphicon glyphicon-new-window"></i></button> -->
+					<button type="button" class="btn btn-success" onclick="gotoACD()">View ACD Status</button>
+					<div class="btn-group" role="group">
 				
 						<div class="dropup">
 						  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
@@ -207,11 +199,9 @@ $(document).ready(onLoad);
 						  </ul>
 						</div>
 					</div>
-					<div class="three-col">
-						<a class="btn reset-btn" onclick="resetACD()">Reset ACD</a>
-					</div>
+					<button type="button" class="btn btn-warning" onclick="resetACD()">Reset ACD</button>
 				</div>
-				<div style="margin-top: 20px;">
+				<div>
 				  <span>App Heartbeat: </span><span id="heartBeat"></span>
 				</div>
 				

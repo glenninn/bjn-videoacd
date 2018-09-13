@@ -12,6 +12,8 @@
 <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 
+<link href="https://fonts.googleapis.com/css?family=Mukta:300,400,500,700" rel="stylesheet">
+
 <script type="text/javascript">
 
 // Time delay between API calls to update the display of the ACD Queue
@@ -70,7 +72,7 @@ function buildQueue(peeps){
   peeps.forEach( (inQ,i)=> {
     var d = new Date( parseInt(inQ.requested) );
     s += '<div class="peep" onclick="takeCall(' + inQ.id +')">';
-	s += '<div class="slot">' + (i+1) + ') </div>';
+	s += '<div class="slot">' + (i+1) + '</div>';
 	s += '<div class="name">' + inQ.name + '</div>';
 	s += '<div class="when">' + d.toLocaleTimeString() + '</div>';
 	s += '</div>';
@@ -107,7 +109,7 @@ function onLoad(){
 }
 
 function gotoAdd(){
- window.location = "/addme.html";
+ window.open("/addme.html","_blank"); 
 }
 
 $(window).load(onLoad);
@@ -116,44 +118,70 @@ $(window).load(onLoad);
 	
 	
 </head>
+
 <body>
-<h1>Agent Console - Video Appointments</h1>
-	<p class="intro">This application provides an Automatic Call Distribution ("ACD") queueing for BlueJeans video sessions.  This program is provided as a Reference Design, <i>use at your own risk</i>.</p>
-    <p class="intro">Realtime display of requests for a Video Session.  Click on an entry to launch a BlueJeans call with the requester</p>
-    <h2>Appointment Queue</h2>
-	<p class="intro">Click on name to start the Video Appointment</p>
-	
-	<div id="peeps" class="peepscrl">
-	</div>
-	
-<div id="debug">
-	<h4>Debugging Area</h4>
-	
-	<div class="btn-group" role="group" aria-label="...">
-		<button type="button" class="btn btn-info" onclick="gotoAdd()">Make Appointment</button>
-
-		<div class="btn-group" role="group">
-
-			<div class="dropup">
-			  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-				Show Raw Data
-				<span class="caret"></span>
-			  </button>
-			  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-				<li><a href="#">
-					<textarea id="results" rows="10" cols="64"></textarea>
-				</a></li>
-			  </ul>
+	<div class="fluid-container">	
+		<header class="row">
+			<div class="logo"><img src="../images/logo.svg" height="30"></div>
+			<div class="new-appt"><span>Make Appointment &nbsp; </span><button type="button" class="btn btn-info header-btn" onclick="gotoAdd()"><i class="glyphicon glyphicon-plus"></i></button></div>
+			
+		</header>
+		
+		<section class="row">
+			<div class="intro">
+				<h3>Agent Console</h3>
+				<h1>Video Appointments</h1>
+				<h5>Patient/Clinic Video Call Queueing System ("ACD"). This page is the Clinic Staff View showing the pending requests by patients for a video meeting.  Click on an entry to launch a BlueJeans call with the requester<h5>
+				<h5>Patients access the site from the <a href="javascript:gotoAdd()">Make An Appointment</a> page.</h5>
+				<h5>This program is provided as a Reference Design, <span class="point-sentence">use at your own risk</span>.</h5>
 			</div>
-		</div>
-	</div>
-	<div>
-	  <span>App Heartbeat: </span><span id="heartBeat"></span>
-	</div>
-	<div>
-	  <span>(c)2018, BlueJeans.</span>
-	</div>
+		
+			<div class="appt">
+				<h1 style="color: #1A8F85; font-weight: 300;">Appointment Queue</h1>
+				<p>Click on name to start the Video Appointment</p>
+				<div id="peeps" class="peepscrl">
+					<div class="peep" onclick="takeCall(1001)">
+						<div class="slot">1</div>
+						<div class="name">Jenny Patient</div>
+						<div class="when">9:59:07 AM</div>
+					</div>
+					<div class="peep" onclick="takeCall(1000)">
+						<div class="slot">2</div>
+						<div class="name">Second Inline</div>
+						<div class="when">9:59:03 AM</div>
+					</div>
+				</div>
+				<div id="debug">
+					<h4>Debugging Area</h4>	
+					<div class="btn-group" role="group" aria-label="...">
+						<div class="btn-group" role="group">	
+							<div class="dropup">
+							  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+								Show Raw Data
+								<span class="caret"></span>
+							  </button>
+							  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+								<li><a href="#">
+									<textarea id="results" rows="10" cols="64"></textarea>
+								</a></li>
+							  </ul>
+							</div>
+						</div>
+					</div>
+					<div>
+					    <span>App Heartbeat: </span><span id="heartBeat"></span>
+					</div>
+				</div>
+			</div>
+			
+		</section>
+	    
+		<footer>
+		  <span>&copy; 2018 BlueJeans Network. <a href="https://www.bluejeans.com" target="_blank">BlueJeans.com</a> </span>
+		</footer>
+	</div>	
 	
 </div>
+		
 </body>	
 </html>
