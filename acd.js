@@ -4,8 +4,10 @@ var fs    = require("fs");
 var auth  = require("./auth.js");
 
 var express=require("express");
-var bodyParser = require("body-parser");
 var app = express();
+var bodyParser = require("body-parser");
+var useragent = require('express-useragent');
+app.use(useragent.express());
 var router = express.Router();
 
 var secPort = process.env.PORT || 443;
@@ -177,7 +179,7 @@ function ScheduleBlueJeans(peep)	// userId,usePasscode, callback)
 	var howManyMinutes = 15;
 	
 	var mtgDetails = {
-		title: 'ACD Meeting #' + peep.id,
+		title: 'TelePsych Meeting #' + peep.id,
 		endPointVersion: '2.10',
 		endPointType: 'WEB_APP',
 		timezone: "America/Los_Angeles",
@@ -230,27 +232,52 @@ function ScheduleBlueJeans(peep)	// userId,usePasscode, callback)
 //   /quick  -- bypass entry steps, go into meeting quickly
 // If the Agents are not using WebRTC, then do not append these strings
 // to the URL
-function makeVideoUrl(peep){
-	var p = new Promise( (resolve,reject)=> {
-		
-		ScheduleBlueJeans(peep).then( (mtgDetails)=> {
-			
-			peep.numericMeetingId = mtgDetails.numericMeetingId;
-			peep.meetingId = mtgDetails.id;
-			peep.bluejeans = "https://bluejeans.com/" + peep.numericMeetingId + "/webrtc/quick";
-			console.log("BlueJeans Meeting: " + peep.bluejeans );
-			
-			resolve(peep.bluejeans);
-			
-		}, (error)=> {
-			
-			peep.numericMeetingId = null;
-			peep.meetingId = null;
-			peep.bluejeans = "";
+function makeVideoUrl(peep,useragt){
 
-			reject(peep.bluejeans);
-			
-		});
+	function makeUrl() {
+		var opts = "";
+		switch( useragt.platform) {
+			case  "iPhone":
+			case "iPad":
+			case "iPod":
+			case "WindowsPhone":
+				opts = "";
+			break;
+			case  "Android":
+				opts = "/webrtc";
+			break;
+			default:
+				opts = "/webrtc";
+			break;
+		}
+		opts += "/quick";
+		var theUrl = "https://bluejeans.com/" + peep.numericMeetingId + opts;
+		console.log("Made BlueJeans URL: " + theUrl );
+		return theUrl;
+	}
+	
+	var p = new Promise( (resolve,reject)=> {
+		console.log("makeVideoUrl: " + peep.meetingId);
+		
+		if(peep.meetingId) {
+			resolve( makeUrl() );
+		}
+		else {		
+			ScheduleBlueJeans(peep).then( (mtgDetails)=> {
+				
+				peep.numericMeetingId = mtgDetails.numericMeetingId;
+				peep.meetingId = mtgDetails.id;
+				resolve(makeUrl());
+				
+			}, (error)=> {
+				
+				peep.numericMeetingId = null;
+				peep.meetingId = null;
+
+				reject("");
+				
+			});
+		}
 	
 	});
 	
@@ -394,16 +421,12 @@ router.route("/dequeue/:id")
 				  theQueue.splice(i,1);	// remove from queue
 			  console.log("/queue/"+iWant + " Dequeued (" + p.name + ")" );
 
-			  if(p.meetingId) {
-				res.status(200).json( p.bluejeans );
-			  } else {
-				makeVideoUrl(p).then( (theUrl)=> {
+			  makeVideoUrl(p,req.useragent).then( (theUrl)=> {
 					res.status(200).json( theUrl );
-				  
-				}, (noUrl)=>{
+			  }, (noUrl)=>{
 					res.status(401).json(noUrl);
-				});
-			  }
+			  });
+			  
 			  done = true;
 		  }
 	  }
@@ -424,16 +447,12 @@ router.route("/dequeue")
 		  theQueue.splice(0,1);
 		  console.log("/dequeue  Dequeued (" + p.name + ")" );
 		  
-		  if(p.meetingId) {
-			  res.status(200).json( p.bluejeans );
-		  } else {
-			  makeVideoUrl(p).then( (theUrl)=> {
-				res.status(200).json( theUrl );
-				  
-			  }, (noUrl)=>{
-				res.status(401).json(noUrl);
-			  });
-		  }
+		  makeVideoUrl(p,rec.useragent).then( (theUrl)=> {
+			res.status(200).json( theUrl );
+			  
+		  }, (noUrl)=>{
+			res.status(401).json(noUrl);
+		  });
 	  }
   });
   
@@ -456,7 +475,7 @@ router.route("/select/:id")
 			  theQueue[i].selected = true;	// flag this appt as selected by an agent
 			  console.log("/select/"+iWant + " Dequeued (" + p.name + ")" );
 
-			  makeVideoUrl(p).then( (theUrl)=> {
+			  makeVideoUrl(p,req.useragent).then( (theUrl)=> {
 				  res.status(200).json( theUrl );
 				  
 			  }, (noUrl)=>{
