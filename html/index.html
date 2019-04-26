@@ -104,6 +104,19 @@ function getQueue(){
   timer = setTimeout( ()=>{ getQueue(); }, interval);
 }
 
+
+function resetACD() {
+  $.ajax( {
+  url: "/queue/reset",
+  method: 'GET',
+  contentType: 'application/json'
+  }).done( (data) => {
+	$("#results").val( JSON.stringify(data,null,2) );
+  }).fail( (error) => {
+	$("#results").val( JSON.stringify(error,null,2) );
+  });
+}
+
 function onLoad(){
   getQueue();
 }
@@ -124,22 +137,23 @@ $(window).load(onLoad);
 	<div class="fluid-container">	
 		<header class="row">
 			<div class="logo"><img src="../images/logo.svg" height="30"></div>
-			<div class="new-appt"><span>Make Appointment &nbsp; </span><button type="button" class="btn btn-info header-btn" onclick="gotoAdd()"><i class="glyphicon glyphicon-plus"></i></button></div>
+			<div class="new-appt"><span><i>to Patient Portal</i> &nbsp; </span><button type="button" class="btn btn-info header-btn" onclick="gotoAdd()"><i class="glyphicon glyphicon-arrow-right"></i></button></div>
 			
 		</header>
 		
 		<section class="row">
 			<div class="intro">
-				<h3>Agent Console</h3>
-				<h1>Video Appointments</h1>
-				<h5>Patient/Clinic Video Call Queueing System ("ACD"). This page is the Clinic Staff View showing the pending requests by patients for a video meeting.  Click on an entry to launch a BlueJeans call with the requester<h5>
-				<h5>Patients access the site from the <a href="javascript:gotoAdd()">Make An Appointment</a> page.</h5>
+				<h3>Patient/Clinic Video Call Queue</h3>
+				<h2>Staff Console</h2>
+				<h5>This page shows the Clinic Staff View of pending patient requests for a video appointment.</h5>
+				<h4>Click on a Patient to connect with them over BlueJeans</h4>
+				<h5>Patients access the site from the <a href="javascript:gotoAdd()">Patient Appointment</a> page.</h5>
 				<h5>This program is provided as a Reference Design, <span class="point-sentence">use at your own risk</span>.</h5>
 			</div>
 		
 			<div class="appt">
 				<h1 style="color: #1A8F85; font-weight: 300;">Appointment Queue</h1>
-				<p>Click on name to start the Video Appointment</p>
+				<p>Click on name to start the Telemed Appointment</p>
 				<div id="peeps" class="peepscrl">
 					<div class="peep" onclick="takeCall(1001)">
 						<div class="slot">1</div>
@@ -152,10 +166,15 @@ $(window).load(onLoad);
 						<div class="when">9:59:03 AM</div>
 					</div>
 				</div>
-				<div id="debug">
-					<h4>Debugging Area</h4>	
-					<div class="btn-group" role="group" aria-label="...">
-						<div class="btn-group" role="group">	
+
+				<div id="debug" class="w6">
+					<h4 style="text-align: center;">Debugging Area</h4>
+					<div class="btn-group w12" role="group" aria-label="...">
+						<div class="three-col">
+							<a class="btn acd-btn" onclick="gotoAdd()">To Patient Page</a>
+						</div>
+						<div class="btn-group three-col" role="group">
+					
 							<div class="dropup">
 							  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
 								Show Raw Data
@@ -168,9 +187,12 @@ $(window).load(onLoad);
 							  </ul>
 							</div>
 						</div>
+						<div class="three-col">
+							<a class="btn reset-btn" onclick="resetACD()">Reset ACD</a>
+						</div>
 					</div>
-					<div>
-					    <span>App Heartbeat: </span><span id="heartBeat"></span>
+					<div style="margin-top: 20px;">
+					  <span>App Heartbeat: </span><span id="heartBeat"></span>
 					</div>
 				</div>
 

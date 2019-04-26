@@ -1,7 +1,8 @@
 var https = require('https');
 var http  = require('http');
 var fs    = require("fs");
-var auth  = require("./auth.js");
+var authorizer  = require("./auth.js");
+var auth  = authorizer();
 
 var express=require("express");
 var app = express();
@@ -296,6 +297,16 @@ function acdStatus(){
 	return s;
 }
 
+router.route("/test/bjn")
+  .get( (req,res)=>{
+	  getAccessToken().then(
+		(token)=> {
+			res.status(200).json({ "success" : { "token":token}});
+		},
+		(error)=>{
+			res.status(401).json({"Error" : "Unable to make test call for access token"});			
+		});
+	});
 
 router.route("/queue")
   .get( (req,res)=>{

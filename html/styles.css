@@ -110,7 +110,7 @@ input {
 
 .peepscrl {
 	overflow-y: auto; 
-	max-height: 200px;	
+	max-height: 300px;	
 }
 
 .peep {
@@ -202,7 +202,12 @@ input {
     border-radius: 20px;
     line-height: 40px;
     font-size: 12px;
+	padding-bottom: 50px;
 }
+.gibtn {
+	vertical-align: middle;
+}
+
 .btn, .btn-info:hover, .btn-info:active, .btn-info:visited, .btn-info:focus, button, button:active {
 	background-color: transparent;
 	border: 0;
