@@ -414,10 +414,12 @@ router.route("/queue/:id/where")
 router.route("/dequeue/:id")
   .get( (req,res)=>{
 	  var iWant;
+	  console.log("/DEQUEUE,  id=" + req.params.id);
+	  
 	  try{
 		  iWant = parseInt( req.params.id );
 	  }catch(e) {
-		  console.log("/queue/"+req.params.id+":  Invalid index");
+		  console.log("/dequeue/"+req.params.id+":  Invalid index");
 		  res.status(500).json({results:"invalid index: " + req.params.id});
 		  return;
 	  };
@@ -430,7 +432,7 @@ router.route("/dequeue/:id")
 			  p = theQueue[i];
 			  if(theQueue[i].selected)
 				  theQueue.splice(i,1);	// remove from queue
-			  console.log("/queue/"+iWant + " Dequeued (" + p.name + ")" );
+			  console.log("/dequeue/"+iWant + " Dequeued (" + p.name + ")" );
 
 			  makeVideoUrl(p,req.useragent).then( (theUrl)=> {
 					res.status(200).json( theUrl );
@@ -442,7 +444,7 @@ router.route("/dequeue/:id")
 		  }
 	  }
 	  if( p==null ) {
-		  console.log("/queue/"+iWant+":  Person not in queue");
+		  console.log("/dequeue/"+iWant+":  Person not in queue");
 		  res.status(500).json({ results: "Person not in queue"});
 	  }
  });
@@ -470,6 +472,7 @@ router.route("/dequeue")
 router.route("/select/:id")
   .get( (req,res)=>{
 	  var iWant;
+	  console.log("/SELECT, id= " + req.params.id);
 	  try{
 		  iWant = parseInt( req.params.id );
 	  }catch(e) {
