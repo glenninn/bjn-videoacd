@@ -430,8 +430,10 @@ router.route("/dequeue/:id")
 	  for(var i=0; (i<theQueue.length) && !done; i++){
 		  if( theQueue[i].id == iWant ){
 			  p = theQueue[i];
-			  if(theQueue[i].selected)
+			  if(theQueue[i].selected) {
+				  console.log(`Removing ${theQueue[i].id} from queue`);
 				  theQueue.splice(i,1);	// remove from queue
+			  }
 			  console.log("/dequeue/"+iWant + " Dequeued (" + p.name + ")" );
 
 			  makeVideoUrl(p,req.useragent).then( (theUrl)=> {
@@ -491,11 +493,11 @@ router.route("/select/:id")
 
 			  makeVideoUrl(p,req.useragent).then( (theUrl)=> {
 				  res.status(200).json( theUrl );
-				  
 			  }, (noUrl)=>{
 				  res.status(401).json(noUrl);
 			  });
 			  done = true;
+			  
 		  }
 	  }
 	  if( p==null ) {
