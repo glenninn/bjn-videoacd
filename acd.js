@@ -137,6 +137,13 @@ var configFile = "config.json";
 var oauthInfo = {};
 var ourTokenInfo = null;
 
+
+function jss(obj) {
+	return JSON.stringify(obj,null,2);
+}
+
+
+
 //
 // Function to return BlueJeans OAUTH access token.  If the token is
 // non-existent, or expired, the function will renew with BlueJeans
@@ -437,6 +444,8 @@ router.route("/dequeue/:id")
 			  console.log("/dequeue/"+iWant + " Dequeued (" + p.name + ")" );
 
 			  makeVideoUrl(p,req.useragent).then( (theUrl)=> {
+					console.log("\n---> DEQUEUE: BlueJeans meeting Id:" + p.numericMeetingId );
+				  
 					res.status(200).json( theUrl );
 			  }, (noUrl)=>{
 					res.status(401).json(noUrl);
@@ -492,6 +501,7 @@ router.route("/select/:id")
 			  console.log("/select/"+iWant + " Dequeued (" + p.name + ")" );
 
 			  makeVideoUrl(p,req.useragent).then( (theUrl)=> {
+				  console.log("\n*****SELECT: BlueJeans meeting Id:" + p.numericMeetingId );
 				  res.status(200).json( theUrl );
 			  }, (noUrl)=>{
 				  res.status(401).json(noUrl);
