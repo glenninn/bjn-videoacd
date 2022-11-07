@@ -1,6 +1,7 @@
 
 # Simple ACD - a Simple NodeJS BlueJeans Video ACD
 
+- 11/7/2022, g1, redeploy to heroku
 - 5/18/2018, g1, Initial Check-in
 
 This reference design shows how one might construct a small formfactor Automatic Call Distribution (ACD) server for queueing BlueJeans Video call requests.
